@@ -1,5 +1,5 @@
 node_modules/
-_temp/
+_download/
 .vscode
 gulp-tsc-tmp-*
 .gulp-tsc-tmp-*
