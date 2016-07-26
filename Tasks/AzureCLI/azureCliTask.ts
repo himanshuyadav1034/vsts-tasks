@@ -1,6 +1,6 @@
-/// <reference path="definitions/node.d.ts" />
-/// <reference path="definitions/Q.d.ts" />
-/// <reference path="definitions/vsts-task-lib.d.ts" />
+/// <reference path="../../definitions/node.d.ts" />
+/// <reference path="../../definitions/Q.d.ts" />
+/// <reference path="../../definitions/vsts-task-lib.d.ts" />
 
 import path = require('path');
 import tl = require('vsts-task-lib/task');
@@ -17,7 +17,7 @@ function delFile()
 }
 var stderrThrow;async function run() {
     try {
-		var bash = tl.createToolRunner(tl.which('node', true));
+		var bash = tl.createToolRunner(tl.which('bash', true));
         tl.setResourcePath(path.join( __dirname, 'task.json'));
 		var azureConfig = tl.createToolRunner(tl.which('azure', true));
 		var azureLogin = tl.createToolRunner(tl.which('azure', true));
@@ -124,7 +124,7 @@ var stderrThrow;async function run() {
     finally {
         // add logout on failure or completion;
 		var azureLogout = tl.createToolRunner(tl.which('azure', true));
-		if(ConnectedServiceNameSelector === "ConnectedServiceName"){
+		if (endpointAuth.scheme === "UsernamePassword") {
 				azureLogout.argString("logout -u " + username );
 				azureLogout.execSync();
 			}
