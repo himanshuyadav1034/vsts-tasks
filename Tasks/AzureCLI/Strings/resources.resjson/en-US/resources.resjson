@@ -1,0 +1,22 @@
+{
+  "loc.friendlyName": "Azure CLI",
+  "loc.helpMarkDown": "Replace with markdown to show in help",
+  "loc.description": "Setup login context for the Azure CLI",
+  "loc.instanceNameFormat": "AzureCLI $(message)",
+  "loc.group.displayName.advanced": "Advanced",
+  "loc.input.label.ConnectedServiceName": "AzureRM Subscription",
+  "loc.input.help.ConnectedServiceName": "Select the Azure Resource Manager subscription for the deployment.",
+  "ms-resource:loc.input.label.scriptType": "Type",
+  "ms-resource:loc.input.help.scriptType": "Type of the script: File Path or Inline Script",
+  "ms-resource:loc.input.label.inlineScript": "Inline Script",
+  "loc.input.label.scriptPath": "Script Path",
+  "loc.input.help.scriptPath": "Relative path from repo root of the shell script file to run.",
+  "loc.input.label.args": "Arguments",
+  "loc.input.help.args": "Arguments passed to the shell script",
+  "loc.input.label.cwd": "Working Directory",
+  "loc.input.help.cwd": "Current working directory where the script is run.  Empty is the root of the repo (build) or artifacts (release), which is $(System.DefaultWorkingDirectory).",
+  "loc.input.label.failOnStandardError": "Fail on Standard Error",
+  "loc.input.help.failOnStandardError": "If this is true, this task will fail if any errors are written to the StandardError stream.",
+  "loc.messages.BashReturnCode": "Bash exited with return code: %d",
+  "loc.messages.BashFailed": "Bash failed with error: %s"
+}

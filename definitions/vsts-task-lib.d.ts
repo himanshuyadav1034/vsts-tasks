@@ -282,6 +282,15 @@ declare module 'vsts-task-lib/task' {
 	    scheme: string;
 	}
 	/**
+	 * Interface for EndpointData
+	 * Contains a schema and a string/string dictionary of endpoint data
+	 *
+	 * string string dictionary of auth data
+	 */
+	export interface EndpointData {
+		[key: string]: string;
+	}
+	/**
 	 * Gets the authorization details for a service endpoint
 	 * If the authorization was not set and is not optional, the task will fail with an error message. Execution will halt.
 	 *
