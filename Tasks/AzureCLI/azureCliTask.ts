@@ -1,144 +1,122 @@
-/// <reference path="../../definitions/node.d.ts" />
-/// <reference path="../../definitions/Q.d.ts" />
-/// <reference path="../../definitions/vsts-task-lib.d.ts" />
+/// <reference path="definitions/node.d.ts" />
+/// <reference path="definitions/Q.d.ts" />
+/// <reference path="definitions/vsts-task-lib.d.ts" />
 
 import path = require('path');
 import tl = require('vsts-task-lib/task');
 var fs = require('fs');
-function write (subscriptionName, SubscriptionId , Certificate)
+var ResultOfToolExecution, endpointAuth, endpointData, subscriptionName, subscriptionId, ConnectedServiceNameSelector;
+var scriptPath:string , cwd:string, argString;
+var failOnStdErr:boolean;
+tl.setResourcePath(path.join( __dirname, 'task.json'));
+const publishSettingFileName = 'subscriptions.publishsettings';
+function createPublishSettingFile (subscriptionName, SubscriptionId , Certificate)
 {
-	fs.writeFileSync('subscriptions.publishsettings','<?xml version="1.0" encoding="utf-8"?><PublishData><PublishProfile SchemaVersion="2.0" PublishMethod="AzureServiceManagementAPI"><Subscription ServiceManagementUrl="https://management.core.windows.net" Id="'
+	//writing the data to the publishsetting file 
+	fs.writeFileSync(publishSettingFileName,'<?xml version="1.0" encoding="utf-8"?><PublishData><PublishProfile SchemaVersion="2.0" PublishMethod="AzureServiceManagementAPI"><Subscription ServiceManagementUrl="https://management.core.windows.net" Id="'
 		+ SubscriptionId + '" Name="' + subscriptionName +'" ManagementCertificate="'+ Certificate + '" /> </PublishProfile></PublishData>');
 }
 
-function delFile()
+function delPublishSettingFile()
 {
-	fs.unlinkSync('subscriptions.publishsettings');
+	//delete the publishsetting file created earlier
+	fs.unlinkSync(publishSettingFileName);
 }
-var stderrThrow;async function run() {
-    try {
-		var bash = tl.createToolRunner(tl.which('bash', true));
-        tl.setResourcePath(path.join( __dirname, 'task.json'));
-		var azureConfig = tl.createToolRunner(tl.which('azure', true));
-		var azureLogin = tl.createToolRunner(tl.which('azure', true));
-		var azureSetSubscription = tl.createToolRunner(tl.which('azure', true));
-		var ConnectedServiceNameSelector = tl.getInput('ConnectedServiceNameSelector', true);
-		var stderrThrow, endpointAuth, endpointData, subscriptionName, subscriptionId;
+function ReadAzureEndpointInput (typeOfService)
+{
+	ConnectedServiceNameSelector = typeOfService;
+	//find if the end point is of type azureRM or azure Classic
+	var connectedService = (ConnectedServiceNameSelector === 'ConnectedServiceNameARM' )? tl.getInput('ConnectedServiceNameARM', true) : tl.getInput('ConnectedServiceName', true);
+	endpointAuth = tl.getEndpointAuthorization(connectedService, true);
+	endpointData= tl.getEndpointData(connectedService, true);
+	subscriptionName= (ConnectedServiceNameSelector === 'ConnectedServiceNameARM' )? endpointData.SubscriptionName : endpointData.subscriptionName;
+	subscriptionId= (ConnectedServiceNameSelector === 'ConnectedServiceNameARM' )? endpointData.SubscriptionId : endpointData.subscriptionId;
+}
+function setInputsForBash()
+{
+	scriptPath = tl.getPathInput('scriptPath', true, true);
+	cwd= tl.getPathInput('cwd', true, false);
+	// if user didn't supply a cwd (advanced), then set cwd to folder script is in.
+	// All "script" tasks should do this
+	if (!tl.filePathSupplied('cwd')) {
+		cwd = path.dirname(scriptPath);
+	}
+	tl.mkdirP(cwd);
+	tl.cd(cwd);
+	// additional args should always call argString.  argString() parses quoted arg strings
+	argString = (tl.getInput('args', false));
+	// determines whether output to stderr will fail a task.
+	// some tools write progress and other warnings to stderr.  scripts can also redirect.
+	failOnStdErr= tl.getBoolInput('failOnStandardError', false);
+}
+export async function run() {
+	try {
+		//read all the inputs common to any scenario of endpoint provided such as subscriptionid and name
+		ReadAzureEndpointInput(tl.getInput('ConnectedServiceNameSelector', true));
 		if (ConnectedServiceNameSelector === 'ConnectedServiceNameARM') {
-
-			var connectedServiceNameARM = tl.getInput('ConnectedServiceNameARM', true);
-			endpointAuth = tl.getEndpointAuthorization(connectedServiceNameARM, true);
 			var servicePrincipalId = endpointAuth.parameters["serviceprincipalid"];
 			var servicePrincipalKey = endpointAuth.parameters["serviceprincipalkey"];
 			var tenantId = endpointAuth.parameters["tenantid"];
-
-			endpointData= tl.getEndpointData(connectedServiceNameARM, true);
-			subscriptionName = endpointData.SubscriptionName;
-
-			azureConfig.argString("config mode arm");
-			stderrThrow = azureConfig.execSync();
-			if(stderrThrow.stderr)
+			//set the azure mode to arm to use azureRM commands
+			ResultOfToolExecution = tl.execSync("azure", "config mode arm" );
+			if(ResultOfToolExecution.stderr)
 			{
-				throw(stderrThrow.stderr);
+				throw(ResultOfToolExecution.stderr);
 			}
-
-			azureLogin.argString("login -u " + servicePrincipalId + " -p " + servicePrincipalKey + " --tenant " + tenantId + " --service-principal");
-			stderrThrow = azureLogin.execSync();
-			if(stderrThrow.stderr)
+			ResultOfToolExecution = tl.execSync("azure", "login -u " + servicePrincipalId + " -p " + servicePrincipalKey + " --tenant " + tenantId + " --service-principal");
+			if(ResultOfToolExecution.stderr)
 			{
-				throw(stderrThrow.stderr);
+				throw(ResultOfToolExecution.stderr);
 			}
-
 		}
 		else{
-			var connectedServiceName = tl.getInput('ConnectedServiceName', true);
-			endpointAuth = tl.getEndpointAuthorization(connectedServiceName, true);
-			endpointData = tl.getEndpointData(connectedServiceName, true);
-
-			subscriptionId = endpointData.subscriptionId;
-			subscriptionName = endpointData.subscriptionName;
-
-			azureConfig.argString("config mode asm");
-			stderrThrow = azureConfig.execSync();
-			if(stderrThrow.stderr)
+			//set the azure mode to asm for using the classic mode commands and services
+			ResultOfToolExecution = tl.execSync("azure", "config mode asm" );
+			if(ResultOfToolExecution.stderr)
 			{
-				throw(stderrThrow.stderr);
+				throw(ResultOfToolExecution.stderr);
 			}
-
 			if (endpointAuth.scheme === "Certificate") {
 				var bytes = endpointAuth.parameters["certificate"];
-				write(subscriptionName, subscriptionId, bytes);
-				azureLogin.argString("account import subscriptions.publishsettings");
-				stderrThrow = azureLogin.execSync();
-				delFile();
-				if(stderrThrow.stderr)
+				createPublishSettingFile(subscriptionName, subscriptionId, bytes);
+				ResultOfToolExecution =tl.execSync("azure", "account import subscriptions.publishsettings");
+				delPublishSettingFile();
+				if(ResultOfToolExecution.stderr)
 				{
-					throw(stderrThrow.stderr);
+					throw(ResultOfToolExecution.stderr);
 				}
 			}
 			else if (endpointAuth.scheme === "UsernamePassword") {
 				var username = endpointAuth.parameters["username"];
 				var passwd = endpointAuth.parameters["password"];
-				//if(!username || !passwd) error message and exit
-				azureLogin.argString("login -u " + username + " -p " + passwd + " -q");
-				stderrThrow = azureLogin.execSync();
-				if(stderrThrow.stderr)
+				ResultOfToolExecution = tl.execSync("azure", "login -u " + username + " -p " + passwd );
+				if(ResultOfToolExecution.stderr)
 				{
-					throw(stderrThrow.stderr);
+					throw(ResultOfToolExecution.stderr);
 				}
-
 			}
 			else {
 				throw("error : problem with authorization scheme, only UsernamePassword and Certificate is acceptable");
 			}
 		}
-		azureSetSubscription.argString("account set " + subscriptionName);
-		stderrThrow = azureSetSubscription.execSync();
-		if(stderrThrow.stderr)
+		//set the subscription imported to the current subscription
+		ResultOfToolExecution = tl.execSync("azure", "account set " + subscriptionName);
+		if(ResultOfToolExecution.stderr)
 		{
-			throw(stderrThrow.stderr);
+			throw(ResultOfToolExecution.stderr);
 		}
-		var scriptPath: string = tl.getPathInput('scriptPath', true, true);
-        var cwd: string = tl.getPathInput('cwd', true, false);
-		// if user didn't supply a cwd (advanced), then set cwd to folder script is in.
-        // All "script" tasks should do this
-        if (!tl.filePathSupplied('cwd')) {
-            cwd = path.dirname(scriptPath);
-        }
-		tl.mkdirP(cwd);
-        tl.cd(cwd);
-		bash.pathArg(scriptPath);
-		// additional args should always call argString.  argString() parses quoted arg strings
-        bash.argString(tl.getInput('args', false));
-
-        // determines whether output to stderr will fail a task.
-        // some tools write progress and other warnings to stderr.  scripts can also redirect.
-        var failOnStdErr: boolean = tl.getBoolInput('failOnStandardError', false);
-        //var code: number = await bash.exec(<any>{failOnStdErr: failOnStdErr});
-        stderrThrow = await bash.exec(<any>{failOnStdErr: failOnStdErr});
-        //tl.setResult(tl.TaskResult.Succeeded, tl.loc('BashReturnCode', code));
-    }
-    catch(err) {
-
+		//read the inputs such as scriptPath, cwd , arguments and options required to execute the bash script
+		setInputsForBash();
+		var code: number = await tl.exec("bash", scriptPath + " " + argString, {failOnStdErr: failOnStdErr});
 	}
-    finally {
-        // add logout on failure or completion;
-		var azureLogout = tl.createToolRunner(tl.which('azure', true));
-		if (endpointAuth.scheme === "UsernamePassword") {
-				azureLogout.argString("logout -u " + username );
-				azureLogout.execSync();
-			}
-		else{
-				azureLogout.argString(" account clear -s " + subscriptionName);
-				azureLogout.execSync();
-			}
-			if(stderrThrow.stderr)
-			{
-				tl.setResult(tl.TaskResult.Failed, tl.loc('BashFailed', stderrThrow.stderr));
-			}else{
-				tl.setResult(tl.TaskResult.Succeeded, tl.loc('BashReturnCode', stderrThrow.stdout));
-			}
-    }   
+	catch(err) {
+	//go to finally and logout of azure and set task result
+	}
+	finally {
+		//log out of azure according to the authentication scheme
+		(endpointAuth.scheme === "UsernamePassword")? tl.execSync("azure", "logout -u " + username) : tl.execSync("azure", " account clear -s " + subscriptionName);
+		//set the task result to either succeeded or failed based on error was thrown or not
+		(ResultOfToolExecution.stderr)?tl.setResult(tl.TaskResult.Failed, tl.loc('AzureFailed', ResultOfToolExecution.stderr)) : tl.setResult(tl.TaskResult.Succeeded, tl.loc('BashReturnCode', code));
+	}
 }
-
 run();
