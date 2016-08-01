@@ -30,25 +30,25 @@
             "required": true,
             "helpMarkDown": "Select the Azure connection type for the Deployment",
             "options": {
-				"connectedServiceName": "Azure Classic",
-				"connectedServiceNameARM": "Azure Resource Manager"
-			}
+                "connectedServiceName": "Azure Classic",
+                "connectedServiceNameARM": "Azure Resource Manager"
+            }
      },
-	 {
+     {
             "name": "connectedServiceNameARM",
             "type": "connectedService:AzureRM",
             "label": "AzureRM Subscription",
             "defaultValue": "",
-			"visibleRule": "connectedServiceNameSelector = connectedServiceNameARM",
+            "visibleRule": "connectedServiceNameSelector = connectedServiceNameARM",
             "required": true,
             "helpMarkDown": "Select the Azure Resource Manager subscription for the deployment"
      },
-	 {
+     {
             "name": "connectedServiceName",
             "type": "connectedService:Azure",
             "label": "Azure Classic Subscription",
             "defaultValue": "",
-			"visibleRule": "connectedServiceNameSelector = connectedServiceName",
+            "visibleRule": "connectedServiceNameSelector = connectedServiceName",
             "required": true,
             "helpMarkDown": "Select the Azure Classic subscription for the deployment"
      },

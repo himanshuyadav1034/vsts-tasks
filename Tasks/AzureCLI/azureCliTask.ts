@@ -5,10 +5,6 @@
 import path = require('path');
 import tl = require('vsts-task-lib/task');
 var fs = require('fs');
-var scriptPath:string;
-var cwd:string;
-var argString;
-var failOnStdErr:boolean;
 tl.setResourcePath(path.join( __dirname, 'task.json'));
 const publishSettingFileName = 'subscriptions.publishsettings';
 function createPublishSettingFile (subscriptionName, subscriptionId , certificate)
@@ -116,8 +112,8 @@ export async function run() {
 		}
 
 		//read the inputs such as scriptPath, cwd , arguments and options required to execute the bash script
-        scriptPath = tl.getPathInput('scriptPath', true, true);
-        cwd= tl.getPathInput('cwd', true, false);
+        var scriptPath = tl.getPathInput('scriptPath', true, true);
+        var cwd= tl.getPathInput('cwd', true, false);
         // if user didn't supply a cwd (advanced), then set cwd to folder script is in.
         // All "script" tasks should do this
         if (!tl.filePathSupplied('cwd')) {
@@ -126,7 +122,7 @@ export async function run() {
         tl.mkdirP(cwd);
         tl.cd(cwd);
         // additional args should always call argString.  argString() parses quoted arg strings
-        argString = (tl.getInput('args', false));
+        var argString = (tl.getInput('args', false));
         // determines whether output to stderr will fail a task.
         // some tools write progress and other warnings to stderr.  scripts can also redirect.
         failOnStdErr= tl.getBoolInput('failOnStandardError', false);
