@@ -1,5 +1,5 @@
 {
-  "id": "c66a18a0-29ff-11e6-a004-61aa17c319ea",
+  "id": "AF08B017-7CCE-4070-B2A8-0A267D82817F",
   "name": "AzureCLI",
   "friendlyName": "ms-resource:loc.friendlyName",
   "description": "ms-resource:loc.description",
@@ -37,11 +37,11 @@
     {
       "name": "ConnectedServiceNameARM",
       "type": "connectedService:AzureRM",
-      "label": "ms-resource:loc.input.label.ConnectedServiceNameRM",
+      "label": "ms-resource:loc.input.label.ConnectedServiceNameARM",
       "defaultValue": "",
       "visibleRule": "ConnectedServiceNameSelector = ConnectedServiceNameARM",
       "required": true,
-      "helpMarkDown": "ms-resource:loc.input.help.ConnectedServiceNameRM"
+      "helpMarkDown": "ms-resource:loc.input.help.ConnectedServiceNameARM"
     },
     {
       "name": "ConnectedServiceName",
@@ -53,20 +53,12 @@
       "helpMarkDown": "ms-resource:loc.input.help.ConnectedServiceName"
     },
     {
-      "name": "ConnectedServiceName",
-      "type": "connectedService:AzureRM",
-      "label": "ms-resource:loc.input.label.ConnectedServiceName",
-      "defaultValue": "",
-      "required": true,
-      "helpMarkDown": "ms-resource:loc.input.help.ConnectedServiceName"
-    },
-    {
       "name": "scriptPath",
       "type": "filePath",
       "label": "ms-resource:loc.input.label.scriptPath",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "ms-resource:loc.input.help.scriptType"
+      "helpMarkDown": "ms-resource:loc.input.help.scriptPath"
     },
     {
       "name": "args",

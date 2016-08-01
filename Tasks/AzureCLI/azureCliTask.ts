@@ -1,6 +1,6 @@
-/// <reference path="definitions/node.d.ts" />
-/// <reference path="definitions/Q.d.ts" />
-/// <reference path="definitions/vsts-task-lib.d.ts" />
+/// <reference path="../../definitions/node.d.ts" />
+/// <reference path="../../definitions/Q.d.ts" />
+/// <reference path="../../definitions/vsts-task-lib.d.ts" />
 
 import path = require('path');
 import tl = require('vsts-task-lib/task');
@@ -49,6 +49,13 @@ function setInputsForBash()
 	// some tools write progress and other warnings to stderr.  scripts can also redirect.
 	failOnStdErr= tl.getBoolInput('failOnStandardError', false);
 }
+function CheckIfStderr(ResultOfToolExecution)
+{
+	if(ResultOfToolExecution.stderr)
+	{
+		throw ResultOfToolExecution.stderr;
+	}
+}
 export async function run() {
 	try {
 		//read all the inputs common to any scenario of endpoint provided such as subscriptionid and name
@@ -59,41 +66,26 @@ export async function run() {
 			var tenantId = endpointAuth.parameters["tenantid"];
 			//set the azure mode to arm to use azureRM commands
 			ResultOfToolExecution = tl.execSync("azure", "config mode arm" );
-			if(ResultOfToolExecution.stderr)
-			{
-				throw(ResultOfToolExecution.stderr);
-			}
+			CheckIfStderr(ResultOfToolExecution);
 			ResultOfToolExecution = tl.execSync("azure", "login -u " + servicePrincipalId + " -p " + servicePrincipalKey + " --tenant " + tenantId + " --service-principal");
-			if(ResultOfToolExecution.stderr)
-			{
-				throw(ResultOfToolExecution.stderr);
-			}
+			CheckIfStderr(ResultOfToolExecution);
 		}
 		else{
 			//set the azure mode to asm for using the classic mode commands and services
 			ResultOfToolExecution = tl.execSync("azure", "config mode asm" );
-			if(ResultOfToolExecution.stderr)
-			{
-				throw(ResultOfToolExecution.stderr);
-			}
+			CheckIfStderr(ResultOfToolExecution);
 			if (endpointAuth.scheme === "Certificate") {
 				var bytes = endpointAuth.parameters["certificate"];
 				createPublishSettingFile(subscriptionName, subscriptionId, bytes);
 				ResultOfToolExecution =tl.execSync("azure", "account import subscriptions.publishsettings");
 				delPublishSettingFile();
-				if(ResultOfToolExecution.stderr)
-				{
-					throw(ResultOfToolExecution.stderr);
-				}
+				CheckIfStderr(ResultOfToolExecution);
 			}
 			else if (endpointAuth.scheme === "UsernamePassword") {
 				var username = endpointAuth.parameters["username"];
 				var passwd = endpointAuth.parameters["password"];
 				ResultOfToolExecution = tl.execSync("azure", "login -u " + username + " -p " + passwd );
-				if(ResultOfToolExecution.stderr)
-				{
-					throw(ResultOfToolExecution.stderr);
-				}
+				CheckIfStderr(ResultOfToolExecution);
 			}
 			else {
 				throw("error : problem with authorization scheme, only UsernamePassword and Certificate is acceptable");
@@ -101,16 +93,13 @@ export async function run() {
 		}
 		//set the subscription imported to the current subscription
 		ResultOfToolExecution = tl.execSync("azure", "account set " + subscriptionName);
-		if(ResultOfToolExecution.stderr)
-		{
-			throw(ResultOfToolExecution.stderr);
-		}
+		CheckIfStderr(ResultOfToolExecution);
 		//read the inputs such as scriptPath, cwd , arguments and options required to execute the bash script
 		setInputsForBash();
 		var code: number = await tl.exec("bash", scriptPath + " " + argString, {failOnStdErr: failOnStdErr});
 	}
 	catch(err) {
-	//go to finally and logout of azure and set task result
+		//go to finally and logout of azure and set task result
 	}
 	finally {
 		//log out of azure according to the authentication scheme
