@@ -8,9 +8,9 @@
   "category": "Utility",
   "demands": [],
   "version": {
-    "Major": "0",
-    "Minor": "1",
-    "Patch": "4"
+    "Major": "1",
+    "Minor": "0",
+    "Patch": "1"
   },
   "minimumAgentVersion": "1.95.0",
   "instanceNameFormat": "ms-resource:loc.instanceNameFormat",
@@ -23,34 +23,34 @@
   ],
   "inputs": [
     {
-      "name": "ConnectedServiceNameSelector",
+      "name": "connectedServiceNameSelector",
       "type": "pickList",
-      "label": "ms-resource:loc.input.label.ConnectedServiceNameSelector",
+      "label": "ms-resource:loc.input.label.connectedServiceNameSelector",
       "defaultValue": "",
       "required": true,
-      "helpMarkDown": "ms-resource:loc.input.help.ConnectedServiceNameSelector",
+      "helpMarkDown": "ms-resource:loc.input.help.connectedServiceNameSelector",
       "options": {
-        "ConnectedServiceName": "Azure Classic",
-        "ConnectedServiceNameARM": "Azure Resource Manager"
+        "connectedServiceName": "Azure Classic",
+        "connectedServiceNameARM": "Azure Resource Manager"
       }
     },
     {
-      "name": "ConnectedServiceNameARM",
+      "name": "connectedServiceNameARM",
       "type": "connectedService:AzureRM",
-      "label": "ms-resource:loc.input.label.ConnectedServiceNameARM",
+      "label": "ms-resource:loc.input.label.connectedServiceNameARM",
       "defaultValue": "",
-      "visibleRule": "ConnectedServiceNameSelector = ConnectedServiceNameARM",
+      "visibleRule": "connectedServiceNameSelector = connectedServiceNameARM",
       "required": true,
-      "helpMarkDown": "ms-resource:loc.input.help.ConnectedServiceNameARM"
+      "helpMarkDown": "ms-resource:loc.input.help.connectedServiceNameARM"
     },
     {
-      "name": "ConnectedServiceName",
+      "name": "connectedServiceName",
       "type": "connectedService:Azure",
-      "label": "ms-resource:loc.input.label.ConnectedServiceName",
+      "label": "ms-resource:loc.input.label.connectedServiceName",
       "defaultValue": "",
-      "visibleRule": "ConnectedServiceNameSelector = ConnectedServiceName",
+      "visibleRule": "connectedServiceNameSelector = connectedServiceName",
       "required": true,
-      "helpMarkDown": "ms-resource:loc.input.help.ConnectedServiceName"
+      "helpMarkDown": "ms-resource:loc.input.help.connectedServiceName"
     },
     {
       "name": "scriptPath",

@@ -2,15 +2,15 @@
   "id": "AF08B017-7CCE-4070-B2A8-0A267D82817F",
   "name": "AzureCLI",
   "friendlyName": "Azure CLI",
-  "description": "Setup login context for the Azure CLI",
+  "description": "Run a Shell script within an Azure environment",
   "author": "Chris Patterson",
   "helpMarkDown": "Replace with markdown to show in help",
   "category": "Utility",
   "demands": [],
   "version": {
-    "Major": "0",
-    "Minor": "1",
-    "Patch": "4"
+    "Major": "1",
+    "Minor": "0",
+    "Patch": "1"
   },
   "minimumAgentVersion": "1.95.0",
   "instanceNameFormat": "AzureCLI $(message)",
@@ -23,34 +23,34 @@
     ],
   "inputs": [
     {
-            "name": "ConnectedServiceNameSelector",
+            "name": "connectedServiceNameSelector",
             "type": "pickList",
             "label": "Azure Connection Type",
             "defaultValue": "",
             "required": true,
             "helpMarkDown": "Select the Azure connection type for the Deployment",
-			"options": {
-				"ConnectedServiceName": "Azure Classic",
-				"ConnectedServiceNameARM": "Azure Resource Manager"
+            "options": {
+				"connectedServiceName": "Azure Classic",
+				"connectedServiceNameARM": "Azure Resource Manager"
 			}
      },
 	 {
-            "name": "ConnectedServiceNameARM",
+            "name": "connectedServiceNameARM",
             "type": "connectedService:AzureRM",
             "label": "AzureRM Subscription",
             "defaultValue": "",
-			"visibleRule": "ConnectedServiceNameSelector = ConnectedServiceNameARM",
+			"visibleRule": "connectedServiceNameSelector = connectedServiceNameARM",
             "required": true,
-            "helpMarkDown": "Select the Azure Resource Manager subscription for the deployment."
+            "helpMarkDown": "Select the Azure Resource Manager subscription for the deployment"
      },
 	 {
-            "name": "ConnectedServiceName",
+            "name": "connectedServiceName",
             "type": "connectedService:Azure",
             "label": "Azure Classic Subscription",
             "defaultValue": "",
-			"visibleRule": "ConnectedServiceNameSelector = ConnectedServiceName",
+			"visibleRule": "connectedServiceNameSelector = connectedServiceName",
             "required": true,
-            "helpMarkDown": "Select the Azure Classic subscription for the deployment."
+            "helpMarkDown": "Select the Azure Classic subscription for the deployment"
      },
      {
             "name": "scriptPath",
@@ -58,7 +58,7 @@
             "label": "Script Path",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Relative path from repo root of the shell script file to run."
+            "helpMarkDown": "Fully qualified path of the script or a path relative to the the default working directory"
         },
         {
             "name": "args",
@@ -74,7 +74,7 @@
             "label": "Working Directory",
             "defaultValue": "",
             "required": false,
-            "helpMarkDown": "Current working directory where the script is run.  Empty is the root of the repo (build) or artifacts (release), which is $(System.DefaultWorkingDirectory).",
+            "helpMarkDown": "Current working directory where the script is run.  Empty is the root of the repo (build) or artifacts (release), which is $(System.DefaultWorkingDirectory)",
             "groupName": "advanced"
         },
         {
@@ -83,7 +83,7 @@
             "label": "Fail on Standard Error",
             "defaultValue": "false",
             "required": false,
-            "helpMarkDown": "If this is true, this task will fail if any errors are written to the StandardError stream.",
+            "helpMarkDown": "If this is true, this task will fail when any errors are written to the StandardError stream",
             "groupName": "advanced"
         }
   ],
