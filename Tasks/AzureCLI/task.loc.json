@@ -1,11 +1,12 @@
 {
-  "id": "AF08B017-7CCE-4070-B2A8-0A267D82817F",
+  "id": "459F4E94-8CC0-40A3-9BAC-77A2D65E3425",
   "name": "AzureCLI",
   "friendlyName": "ms-resource:loc.friendlyName",
   "description": "ms-resource:loc.description",
-  "author": "Chris Patterson",
+  "author": "Microsoft Corporation",
   "helpMarkDown": "ms-resource:loc.helpMarkDown",
   "category": "Utility",
+  "visibility":["Build","Release"],
   "demands": [],
   "version": {
     "Major": "1",
