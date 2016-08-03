@@ -93,7 +93,7 @@ function logoutAzureSubscription(connectedServiceNameSelector:string, connectedS
 {
     var endpointData= tl.getEndpointData(connectedService, true);
     var subscriptionName:string = (connectedServiceNameSelector === 'connectedServiceNameARM')? endpointData["SubscriptionName"]: endpointData["subscriptionName"];
-    var resultOfToolExecution =tl.execSync("azure", " acccount clear -s " + subscriptionName);
+    var resultOfToolExecution =tl.execSync("azure", " account clear -s " + subscriptionName);
     throwIfError(resultOfToolExecution);
 }
 function logoutAzure(connectedService)
