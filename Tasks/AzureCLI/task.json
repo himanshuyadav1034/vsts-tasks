@@ -90,12 +90,13 @@
   ],
   "execution": {
     "Node": {
-      "target": "azureCliTask.js",
+      "target": "azureclitask.js",
       "argumentFormat": ""
     }
   },
   "messages": {
         "BashReturnCode": "Bash exited with return code: %d",
-        "BashFailed": "Bash failed with error: %s"
+        "BashFailed": "Bash failed with error: %s",
+        "AzureFailed": "Azure failed with error: %s"
     }
 }

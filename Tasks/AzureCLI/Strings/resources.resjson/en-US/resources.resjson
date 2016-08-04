@@ -19,5 +19,6 @@
   "loc.input.label.failOnStandardError": "Fail on Standard Error",
   "loc.input.help.failOnStandardError": "If this is true, this task will fail when any errors are written to the StandardError stream",
   "loc.messages.BashReturnCode": "Bash exited with return code: %d",
-  "loc.messages.BashFailed": "Bash failed with error: %s"
+  "loc.messages.BashFailed": "Bash failed with error: %s",
+  "loc.messages.AzureFailed": "Azure failed with error: %s"
 }

@@ -6,7 +6,10 @@
   "author": "Microsoft Corporation",
   "helpMarkDown": "ms-resource:loc.helpMarkDown",
   "category": "Utility",
-  "visibility":["Build","Release"],
+  "visibility": [
+    "Build",
+    "Release"
+  ],
   "demands": [],
   "version": {
     "Major": "1",
@@ -90,12 +93,13 @@
   ],
   "execution": {
     "Node": {
-      "target": "azureCliTask.js",
+      "target": "azureclitask.js",
       "argumentFormat": ""
     }
   },
   "messages": {
     "BashReturnCode": "ms-resource:loc.messages.BashReturnCode",
-    "BashFailed": "ms-resource:loc.messages.BashFailed"
+    "BashFailed": "ms-resource:loc.messages.BashFailed",
+    "AzureFailed": "ms-resource:loc.messages.AzureFailed"
   }
 }
