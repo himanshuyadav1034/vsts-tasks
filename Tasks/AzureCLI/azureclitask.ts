@@ -1,7 +1,6 @@
 /// <reference path="../../definitions/node.d.ts" />
 /// <reference path="../../definitions/Q.d.ts" />
 /// <reference path="../../definitions/vsts-task-lib.d.ts" />
-
 import path = require('path');
 import tl = require('vsts-task-lib/task');
 export class azureclitask {
@@ -13,22 +12,22 @@ export class azureclitask {
                 + subscriptionId + '" Name="' + subscriptionName + '" ManagementCertificate="' + certificate + '" /> </PublishProfile></PublishData>');
         }
         catch (err) {
-            if (this.fs.existsSync(publishSettingFileName)) {
-                this.deletePublishSettingFile(publishSettingFileName);
-            }
+            this.deletePublishSettingFile(publishSettingFileName);
             console.error("Error in writing PublishSetting File");
             throw err;
         }
     }
     private static loginStatus:boolean = false;
     public static deletePublishSettingFile(publishSettingFileName:string): void {
-        try {
-            //delete the publishsetting file created earlier
-            this.fs.unlinkSync(publishSettingFileName);
-        }
-        catch (err) {
-            console.error("Error in deleting PublishSetting File");
-            throw err;
+        if (this.fs.existsSync(publishSettingFileName)) {
+            try {
+                //delete the publishsetting file created earlier
+                this.fs.unlinkSync(publishSettingFileName);
+            }
+            catch (err) {
+                console.error("Error in deleting PublishSetting File");
+                throw err;
+            }
         }
     }
 
@@ -40,15 +39,12 @@ export class azureclitask {
         var tenantId:string = endpointAuth.parameters["tenantid"];
         var subscriptionName:string = endpointData["SubscriptionName"];
         //set the azure mode to arm to use azureRM commands
-        var resultOfToolExecution = tl.execSync("azure", "config mode arm");
-        this.throwIfError(resultOfToolExecution);
+        this.throwIfError(tl.execSync("azure", "config mode arm"));
         //login using svn
-        resultOfToolExecution = tl.execSync("azure", "login -u " + servicePrincipalId + " -p " + servicePrincipalKey + " --tenant " + tenantId + " --service-principal");
-        this.throwIfError(resultOfToolExecution);
+        this.throwIfError(tl.execSync("azure", "login -u " + servicePrincipalId + " -p " + servicePrincipalKey + " --tenant " + tenantId + " --service-principal"));
         this.loginStatus = true;
         //set the subscription imported to the current subscription
-        resultOfToolExecution = tl.execSync("azure", "account set " + subscriptionName);
-        this.throwIfError(resultOfToolExecution);
+        this.throwIfError(tl.execSync("azure", "account set " + subscriptionName));
     }
 
     public static loginAzureClassic(connectedService):void {
@@ -56,30 +52,26 @@ export class azureclitask {
         var endpointData = tl.getEndpointData(connectedService, true);
         var subscriptionName:string = endpointData["subscriptionName"];
         //set the azure mode to asm to use azureRM commands
-        var resultOfToolExecution = tl.execSync("azure", "config mode asm");
-        this.throwIfError(resultOfToolExecution);
+        this.throwIfError(tl.execSync("azure", "config mode asm"));
         if (endpointAuth.scheme === "Certificate") {
             var bytes = endpointAuth.parameters["certificate"];
             var subscriptionId:string = endpointData["subscriptionId"];
             const publishSettingFileName:string = 'subscriptions.publishsettings';
             this.createPublishSettingFile(subscriptionName, subscriptionId, bytes, publishSettingFileName);
-            resultOfToolExecution = tl.execSync("azure", "account import " + publishSettingFileName);
+            var resultOfToolExecution = tl.execSync("azure", "account import " + publishSettingFileName);
             this.deletePublishSettingFile(publishSettingFileName);
             this.throwIfError(resultOfToolExecution);
             this.loginStatus = true;
             //set the subscription imported to the current subscription
-            resultOfToolExecution = tl.execSync("azure", "account set " + subscriptionName);
-            this.throwIfError(resultOfToolExecution);
+            this.throwIfError( tl.execSync("azure", "account set " + subscriptionName));
         }
         else if (endpointAuth.scheme === "UsernamePassword") {
             var username:string = endpointAuth.parameters["username"];
             var passwd:string = endpointAuth.parameters["password"];
-            resultOfToolExecution = tl.execSync("azure", "login -u " + username + " -p " + passwd);
-            this.throwIfError(resultOfToolExecution);
+            this.throwIfError(tl.execSync("azure", "login -u " + username + " -p " + passwd));
             this.loginStatus = true;
             //set the subscription imported to the current subscription
-            resultOfToolExecution = tl.execSync("azure", "account set " + subscriptionName);
-            this.throwIfError(resultOfToolExecution);
+            this.throwIfError(tl.execSync("azure", "account set " + subscriptionName));
         }
         else {
             throw("error : problem with authorization scheme, only UsernamePassword and Certificate is acceptable");
@@ -89,15 +81,15 @@ export class azureclitask {
     public static logoutAzureSubscription(connectedServiceNameSelector:string, connectedService:string):void {
         var endpointData = tl.getEndpointData(connectedService, true);
         var subscriptionName:string = (connectedServiceNameSelector === 'ConnectedServiceNameARM') ? endpointData["SubscriptionName"] : endpointData["subscriptionName"];
-        var resultOfToolExecution = tl.execSync("azure", " account clear -s " + subscriptionName);
-        this.throwIfError(resultOfToolExecution);
+        //var resultOfToolExecution = tl.execSync("azure", " account clear -s " + subscriptionName);
+        this.throwIfError(tl.execSync("azure", " account clear -s " + subscriptionName));
     }
 
     public static logoutAzure(connectedService):void {
         var endpointAuth = tl.getEndpointAuthorization(connectedService, true);
         var username:string = endpointAuth.parameters["username"];
-        var resultOfToolExecution = tl.execSync("azure", "logout -u " + username);
-        this.throwIfError(resultOfToolExecution);
+        //var resultOfToolExecution = tl.execSync("azure", "logout -u " + username);
+        this.throwIfError(tl.execSync("azure", "logout -u " + username));
     }
 
     public static throwIfError(resultOfToolExecution):void {
@@ -106,10 +98,10 @@ export class azureclitask {
         }
     }
 
-    public static runMain():void {
+    public static async runMain() {
         try {
             var connectedService:string;
-            var resultOfToolExecution;
+            var resultOfToolExecution= null;
             var connectedServiceNameSelector = tl.getInput('connectedServiceNameSelector', true);
             if (connectedServiceNameSelector === 'ConnectedServiceNameARM') {
                 connectedService = tl.getInput('connectedServiceNameARM', true);
@@ -135,7 +127,7 @@ export class azureclitask {
             // determines whether output to stderr will fail a task.
             // some tools write progress and other warnings to stderr.  scripts can also redirect.
             var failOnStdErr = tl.getBoolInput('failOnStandardError', false);
-            var code = tl.execSync("bash", scriptPath + " " + argString, {failOnStdErr: failOnStdErr});
+            var code = await tl.exec("bash", scriptPath + " " + argString, {failOnStdErr: failOnStdErr});
         }
         catch (err) {
             resultOfToolExecution = err;
@@ -155,13 +147,10 @@ export class azureclitask {
             tl.setResourcePath(path.join( __dirname, 'task.json'));
             //set the task result to either succeeded or failed based on error was thrown or not
             if (resultOfToolExecution) {
-                tl.setResult(tl.TaskResult.Failed, tl.loc('AzureFailed', resultOfToolExecution.stderr));
-            }
-            else if (code.stderr) {
-                tl.setResult(tl.TaskResult.Failed, tl.loc('BashFailed', code.stderr));
+                tl.setResult(tl.TaskResult.Failed, tl.loc('BashFailed', resultOfToolExecution.stderr));
             }
             else {
-                tl.setResult(tl.TaskResult.Succeeded, tl.loc('BashReturnCode', code.code));
+                tl.setResult(tl.TaskResult.Succeeded, tl.loc('BashReturnCode', code));
             }
         }
     }
