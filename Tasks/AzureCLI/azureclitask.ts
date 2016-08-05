@@ -1,11 +1,14 @@
 /// <reference path="../../definitions/node.d.ts" />
 /// <reference path="../../definitions/Q.d.ts" />
 /// <reference path="../../definitions/vsts-task-lib.d.ts" />
+
 import path = require('path');
 import tl = require('vsts-task-lib/task');
+
 export class azureclitask {
     private static fs = require('fs');
-    public static createPublishSettingFile(subscriptionName:string, subscriptionId:string, certificate:string, publishSettingFileName:string): void  {
+
+    private static createPublishSettingFile(subscriptionName:string, subscriptionId:string, certificate:string, publishSettingFileName:string): void  {
         //writing the data to the publishsetting file
         try {
             this.fs.writeFileSync(publishSettingFileName, '<?xml version="1.0" encoding="utf-8"?><PublishData><PublishProfile SchemaVersion="2.0" PublishMethod="AzureServiceManagementAPI"><Subscription ServiceManagementUrl="https://management.core.windows.net" Id="'
@@ -17,8 +20,10 @@ export class azureclitask {
             throw err;
         }
     }
+
     private static loginStatus:boolean = false;
-    public static deletePublishSettingFile(publishSettingFileName:string): void {
+
+    private static deletePublishSettingFile(publishSettingFileName:string): void {
         if (this.fs.existsSync(publishSettingFileName)) {
             try {
                 //delete the publishsetting file created earlier
@@ -31,7 +36,7 @@ export class azureclitask {
         }
     }
 
-    public static loginAzureRM(connectedService:string): void {
+    private static loginAzureRM(connectedService:string): void {
         var endpointAuth = tl.getEndpointAuthorization(connectedService, true);
         var endpointData = tl.getEndpointData(connectedService, true);
         var servicePrincipalId:string = endpointAuth.parameters["serviceprincipalid"];
@@ -47,7 +52,7 @@ export class azureclitask {
         this.throwIfError(tl.execSync("azure", "account set " + subscriptionName));
     }
 
-    public static loginAzureClassic(connectedService):void {
+    private static loginAzureClassic(connectedService):void {
         var endpointAuth = tl.getEndpointAuthorization(connectedService, true);
         var endpointData = tl.getEndpointData(connectedService, true);
         var subscriptionName:string = endpointData["subscriptionName"];
@@ -78,21 +83,46 @@ export class azureclitask {
         }
     }
 
-    public static logoutAzureSubscription(connectedServiceNameSelector:string, connectedService:string):void {
+    private static logoutAzure(connectedServiceNameSelector:string)
+    {
+        var connectedService:string;
+        if(connectedServiceNameSelector ==='ConnectedServiceNameARM')
+        {
+            connectedService = tl.getInput('connectedServiceNameARM', true);
+            this.logoutAzureRM(connectedService);
+        }
+        else
+        {
+            connectedService = tl.getInput('connectedServiceName', true);
+            this.logoutAzureClassic(connectedService);
+        }
+    }
+
+    private static logoutAzureRM(connectedService:string)
+    {
         var endpointData = tl.getEndpointData(connectedService, true);
-        var subscriptionName:string = (connectedServiceNameSelector === 'ConnectedServiceNameARM') ? endpointData["SubscriptionName"] : endpointData["subscriptionName"];
-        //var resultOfToolExecution = tl.execSync("azure", " account clear -s " + subscriptionName);
+        var subscriptionName:string =endpointData["SubscriptionName"];
         this.throwIfError(tl.execSync("azure", " account clear -s " + subscriptionName));
     }
 
-    public static logoutAzure(connectedService):void {
+    private static logoutAzureClassic(connectedService:string)
+    {
         var endpointAuth = tl.getEndpointAuthorization(connectedService, true);
-        var username:string = endpointAuth.parameters["username"];
-        //var resultOfToolExecution = tl.execSync("azure", "logout -u " + username);
-        this.throwIfError(tl.execSync("azure", "logout -u " + username));
+        if(endpointAuth["scheme"] === "usernamePassword")
+        {
+            var username:string = endpointAuth.parameters["username"];
+            //var resultOfToolExecution = tl.execSync("azure", "logout -u " + username);
+            this.throwIfError(tl.execSync("azure", "logout -u " + username));
+        }
+        else
+        {
+            var endpointData = tl.getEndpointData(connectedService, true);
+            var subscriptionName:string = endpointData["subscriptionName"];
+            this.throwIfError(tl.execSync("azure", " account clear -s " + subscriptionName));
+        }
     }
 
-    public static throwIfError(resultOfToolExecution):void {
+    private static throwIfError(resultOfToolExecution):void {
         if (resultOfToolExecution.stderr) {
             throw resultOfToolExecution;
         }
@@ -100,6 +130,7 @@ export class azureclitask {
 
     public static async runMain() {
         try {
+            var bash = tl.createToolRunner(tl.which('bash', true));
             var connectedService:string;
             var resultOfToolExecution= null;
             var connectedServiceNameSelector = tl.getInput('connectedServiceNameSelector', true);
@@ -122,27 +153,21 @@ export class azureclitask {
             }
             tl.mkdirP(cwd);
             tl.cd(cwd);
+            bash.pathArg(scriptPath);
             // additional args should always call argString.  argString() parses quoted arg strings
-            var argString = tl.getInput('args', false);
+            bash.argString(tl.getInput('args', false));
             // determines whether output to stderr will fail a task.
             // some tools write progress and other warnings to stderr.  scripts can also redirect.
             var failOnStdErr = tl.getBoolInput('failOnStandardError', false);
-            var code = await tl.exec("bash", scriptPath + " " + argString, {failOnStdErr: failOnStdErr});
-        }
+            var code: number = await bash.exec(<any>{failOnStdErr: failOnStdErr});        }
         catch (err) {
             resultOfToolExecution = err;
             //go to finally and logout of azure and set task result
         }
         finally {
-            //log out of azure according to the authentication scheme. either logout using username or remove subscription from machine(service priniciple and certificate)
+            //Logout of Azure if logged in
             if (this.loginStatus) {
-                var endpointAuth = tl.getEndpointAuthorization(connectedService, true);
-                try {
-                    (endpointAuth.scheme === "UsernamePassword") ? this.logoutAzure(connectedService) : this.logoutAzureSubscription(connectedServiceNameSelector, connectedService);
-                }
-                catch (err) {
-                    console.error("logout of azure failed ");
-                }
+                this.logoutAzure(connectedServiceNameSelector);
             }
             tl.setResourcePath(path.join( __dirname, 'task.json'));
             //set the task result to either succeeded or failed based on error was thrown or not
